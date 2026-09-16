@@ -1,0 +1,16 @@
+# Ignora carpetas __pycache__ en la raíz y cualquier subcarpeta
+__pycache__/
+
+# Ignora archivos compilados
+*.pyc
+*.pyo
+*.pyd
+
+# Ignora entornos virtuales
+venv/
+.venv/
+env/
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
