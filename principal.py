@@ -3,32 +3,31 @@ from utilerias import limpiar_pantalla, leer_numero
 
 def main():
     mensaje = "Bienvenido al sistema de facturación"
+
     impuesto = 0.15
     limite = 10
-    nombre = None
     porcentaje = 0.00
 
     nombre = leer_cliente(mensaje)
 
     # CAMBIO #1
-    # Permitir ingresar varios productos
-    cantidad_productos = (leer_numero("Ingrese la cantidad de productos diferentes: ", tipo=int))
+    # Ingreso del producto 1
+    print("\nProducto #1")
+    nombre1 = input("Ingrese el nombre del producto: ")
+    precio1 = leer_numero("Ingrese el precio del producto: ",tipo=float)
+    cantidad1 = leer_numero("Ingrese la cantidad del producto: ",tipo=int)
 
-    productos = []
+    # Ingreso del producto 2
+    print("\nProducto #2")
+    nombre2 = input("Ingrese el nombre del producto: ")
+    precio2 = leer_numero("Ingrese el precio del producto: ",tipo=float)
+    cantidad2 = leer_numero("Ingrese la cantidad del producto: ",tipo=int)
 
-    for i in range(cantidad_productos):
-        print(f"\nProducto #{i + 1}")
+    porcentaje = leer_numero("\nIngrese el porcentaje de descuento: ",tipo=float)
 
-        precio = leer_numero("Ingrese el precio del producto: ", tipo=float)
-        cantidad = leer_numero("Ingrese la cantidad del producto: ", tipo=int)
+    (total,total_productos,cantidad_total,subtotal1,subtotal2,descuento,tipo_descuento,iva) = calcular_total( precio1, precio2, cantidad1, cantidad2, porcentaje,impuesto,limite)
 
-        productos.append((precio, cantidad))
-
-    porcentaje = leer_numero("\nIngrese el porcentaje de descuento: ", tipo=float)
-
-    total, total_productos, descuento, descuento_volumen, iva = calcular_total(productos, porcentaje, impuesto, limite)
-
-    mostrar_factura(nombre, productos, porcentaje, total_productos, descuento, descuento_volumen, iva,total)
+    mostrar_factura(nombre,nombre1,nombre2,precio1,precio2,cantidad1,cantidad2,subtotal1,subtotal2,porcentaje,total_productos,descuento,tipo_descuento,iva,total)
 
 
 def leer_cliente(mensaje):
@@ -41,56 +40,70 @@ def leer_cliente(mensaje):
         nombre = input("Ingrese el nombre del cliente: ")
 
         if not nombre.strip():
-            print("El nombre del cliente no puede estar vacío.\nPor favor, ingrese un nombre válido.")
+            print("El nombre del cliente no puede estar vacío.\n""Por favor, ingrese un nombre válido.")
         else:
             break
 
     return nombre
 
 
-def calcular_total(productos, porcentaje, impuesto, limite):
+def calcular_total(precio1,precio2,cantidad1,cantidad2,porcentaje,impuesto,limite):
     # CAMBIO #1
-    # Obtener el total acumulado de todos los productos
-    total_productos, cantidad_total = calcular_total_productos(productos)
+    (total_productos,cantidad_total,subtotal1,subtotal2) = calcular_total_productos(precio1,precio2,cantidad1,cantidad2)
 
-    descuento = calcular_descuento(total_productos, porcentaje)
+    descuento, tipo_descuento = calcular_descuento(total_productos,porcentaje,cantidad_total,limite)
 
-    # CAMBIO #2
-    # Calcular descuento adicional por volumen
-    descuento_volumen = calcular_descuento_por_volumen(total_productos, cantidad_total, limite)
+    iva = calcular_iva(total_productos,impuesto)
 
-    iva = calcular_iva(total_productos, impuesto)
+    total = total_productos - descuento + iva
 
-    total = total_productos - descuento - descuento_volumen + iva
-
-    return total, total_productos, descuento, descuento_volumen, iva
+    return (total,total_productos,cantidad_total,subtotal1,subtotal2,descuento,tipo_descuento,iva)
 
 
 # CAMBIO #1
-def calcular_total_productos(productos):
-    total_productos = 0.00
-    cantidad_total = 0
+def calcular_total_productos(precio1,precio2,cantidad1,cantidad2):
+    subtotal1 = calcular_subtotal1(precio1,cantidad1)
+    subtotal2 = calcular_subtotal2( precio2, cantidad2)
 
-    for precio, cantidad in productos:
-        subtotal = calcular_subtotal(precio, cantidad)
-        total_productos += subtotal
-        cantidad_total += cantidad
+    total_productos = subtotal1 + subtotal2
+    cantidad_total = cantidad1 + cantidad2
 
-    return total_productos, cantidad_total
+    return (total_productos,cantidad_total,subtotal1,subtotal2)
 
 
-def calcular_subtotal(precio, cantidad):
-    subtotal = precio * cantidad
-    return subtotal
+def calcular_subtotal1(precio1, cantidad1):
+    subtotal1 = precio1 * cantidad1
+    return subtotal1
 
 
-def calcular_descuento(total_productos, porcentaje):
-    descuento = total_productos * (porcentaje / 100)
-    return descuento
+def calcular_subtotal2(precio2, cantidad2):
+    subtotal2 = precio2 * cantidad2
+    return subtotal2
+
+
+def calcular_descuento(total_productos, porcentaje,cantidad_total,limite
+):
+    # CAMBIO #2
+    # Primero se verifica el descuento por volumen
+    descuento_volumen = calcular_descuento_por_volumen(total_productos,cantidad_total,limite)
+
+    # Solo se aplica un tipo de descuento
+    if descuento_volumen > 0:
+        descuento = descuento_volumen
+        tipo_descuento = "Descuento por volumen (5%)"
+    else:
+        descuento = total_productos * (porcentaje / 100)
+        tipo_descuento = f"Descuento ({porcentaje}%)"
+
+    return descuento, tipo_descuento
 
 
 # CAMBIO #2
-def calcular_descuento_por_volumen(total_productos, cantidad_total, limite):
+def calcular_descuento_por_volumen(
+    total_productos,
+    cantidad_total,
+    limite
+):
     porcentaje_volumen = 0.05
 
     if cantidad_total > limite:
@@ -103,33 +116,39 @@ def calcular_descuento_por_volumen(total_productos, cantidad_total, limite):
 
 def calcular_iva(total_productos, impuesto):
     iva = total_productos * impuesto
+
     return iva
 
 
-def mostrar_factura(nombre, productos, porcentaje, total_productos, descuento, descuento_volumen, iva, total):
+def mostrar_factura(nombre,nombre1,nombre2,precio1,precio2,cantidad1,cantidad2,subtotal1,subtotal2,porcentaje,total_productos,descuento,tipo_descuento,iva,total):
     limpiar_pantalla()
 
     print("=" * 40)
     print("               FACTURA")
     print("=" * 40)
+
     print("Cliente:", nombre)
-    print("\nPRODUCTOS")
+
+    print("\nPRODUCTO #1")
+    print("-" * 40)
+    print("Nombre:", nombre1)
+    print(f"Precio: {precio1:.2f}")
+    print("Cantidad:", cantidad1)
+    print(f"Subtotal: {subtotal1:.2f}")
+
+    print("\nPRODUCTO #2")
+    print("-" * 40)
+    print("Nombre:", nombre2)
+    print(f"Precio: {precio2:.2f}")
+    print("Cantidad:", cantidad2)
+    print(f"Subtotal: {subtotal2:.2f}")
+
     print("-" * 40)
 
-    for i, producto in enumerate(productos):
-        precio, cantidad = producto
-        subtotal = calcular_subtotal(precio, cantidad)
-
-        print(f"Producto #{i + 1}")
-        print(f"Precio: {precio:.2f}")
-        print(f"Cantidad: {cantidad}")
-        print(f"Subtotal: {subtotal:.2f}")
-        print("-" * 40)
-
     print(f"Total productos: {total_productos:.2f}")
-    print(f"Descuento ({porcentaje}%): {descuento:.2f}")
-    print(f"Descuento por volumen: {descuento_volumen:.2f}")
+    print(f"{tipo_descuento}: {descuento:.2f}")
     print(f"IVA (15%): {iva:.2f}")
+
     print("-" * 40)
     print(f"Total: {total:.2f}")
     print("=" * 40)
