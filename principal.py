@@ -12,7 +12,7 @@ def main():
 
     # CAMBIO #1
     # Permitir ingresar varios productos
-    cantidad_productos = leer_numero("Ingrese la cantidad de productos diferentes: ", tipo=int)
+    cantidad_productos = (leer_numero("Ingrese la cantidad de productos diferentes: ", tipo=int))
 
     productos = []
 
@@ -104,7 +104,6 @@ def calcular_descuento_por_volumen(total_productos, cantidad_total, limite):
 def calcular_iva(total_productos, impuesto):
     iva = total_productos * impuesto
     return iva
-
 
 
 def mostrar_factura(nombre, productos, porcentaje, total_productos, descuento, descuento_volumen, iva, total):
